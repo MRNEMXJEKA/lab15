@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Список бажань</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Rubik:wght@500;700;800&display=swap"
+    />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <h1>Список бажань</h1>
+      <!-- Посилання data-link перехоплює клієнтський роутер (script.js) -->
+      <nav>
+        <a href="#/" data-link>Усі бажання</a>
+        <a href="#/purchased" data-link>Куплені</a>
+      </nav>
+    </header>
+
+    <div class="layout" id="app" v-cloak>
+      <!-- Контейнер сторінок SPA: вміст залежить від поточного маршруту (route) -->
+      <main id="page-view">
+        <p v-if="!storageReady" class="empty-list">Завантаження…</p>
+
+        <!-- Маршрути «/» і «/purchased»: список бажань -->
+        <template v-else-if="route.page === 'list'">
+          <section id="add-wish" v-if="route.showForm">
+            <h2>Додати бажання</h2>
+            <form id="wish-form" @submit.prevent="addWish">
+              <label for="wish-title">Назва бажання:</label>
+              <input type="text" id="wish-title" name="wish-title" v-model.trim="newTitle" required />
+
+              <label for="wish-price">Ціна:</label>
+              <input
+                type="number"
+                id="wish-price"
+                name="wish-price"
+                step="0.01"
+                min="0"
+                v-model.number="newPrice"
+                @input="validatePrice"
+                required
+              />
+
+              <label for="wish-url">Посилання на товар:</label>
+              <input
+                type="url"
+                id="wish-url"
+                name="wish-url"
+                placeholder="https://..."
+                pattern="https?://.+"
+                title="Посилання має починатися з http:// або https://"
+                v-model.trim="newUrl"
+              />
+
+              <label for="wish-priority">Пріоритет:</label>
+              <select id="wish-priority" name="wish-priority" v-model="newPriority">
+                <option value="низький">Низький</option>
+                <option value="середній">Середній</option>
+                <option value="високий">Високий</option>
+              </select>
+
+              <button type="submit" class="btn-add">
+                <span class="btn-add__icon" aria-hidden="true">+</span>
+                Додати
+              </button>
+            </form>
+          </section>
+
+          <section id="wish-list">
+            <h2>{{ route.title }}</h2>
+            <div v-if="route.showForm" class="list-toolbar">
+              <button type="button" id="import-btn" class="btn-reload" :disabled="loading || !storageReady" @click="importFromApi">Завантажити з сервера</button>
+              <p id="status" class="status" :class="{ 'status--error': isError }" role="status" aria-live="polite">{{ statusText }}</p>
+            </div>
+            <p v-if="storageError" class="storage-error" role="alert">{{ storageError }}</p>
+            <p v-if="visibleWishes.length === 0" class="empty-list">{{ route.emptyText }}</p>
+            <div id="wishlist" class="cards">
+              <wish-item
+                v-for="wish in visibleWishes"
+                :key="wish.id"
+                :id="wish.id"
+                :title="wish.title"
+                :price="wish.price"
+                :url="wish.url"
+                :priority="wish.priority"
+                :image="wish.image"
+                :purchased="wish.purchased"
+                :saved="wish.saved"
+                @toggle="togglePurchased"
+                @remove="removeWish"
+                @save="addSaving"
+              ></wish-item>
+            </div>
+          </section>
+        </template>
+
+        <!-- Маршрут «/wishes/:id»: деталі одного товару -->
+        <section v-else-if="route.page === 'detail' && currentWish" class="detail">
+          <a href="#/" data-link class="back-link">← До списку бажань</a>
+          <h2>{{ currentWish.title }}</h2>
+          <dl class="detail__info">
+            <dt>Ціна</dt>
+            <dd>{{ currentWish.price !== null && currentWish.price !== undefined ? currentWish.price.toFixed(2) + ' грн' : 'не вказана' }}</dd>
+            <dt>Посилання</dt>
+            <dd>
+              <a v-if="currentWishHref" :href="currentWishHref" target="_blank" rel="noopener">{{ currentWish.url }}</a>
+              <span v-else>немає</span>
+            </dd>
+            <dt>Статус</dt>
+            <dd>{{ currentWish.purchased ? 'Куплено' : 'Ще не куплено' }}</dd>
+            <dt>Пріоритет</dt>
+            <dd>{{ currentWish.priority }}</dd>
+          </dl>
+          <div class="detail__card">
+            <wish-item
+              :key="currentWish.id"
+              :id="currentWish.id"
+              :title="currentWish.title"
+              :price="currentWish.price"
+              :url="currentWish.url"
+              :priority="currentWish.priority"
+              :image="currentWish.image"
+              :purchased="currentWish.purchased"
+              :saved="currentWish.saved"
+              @toggle="togglePurchased"
+              @remove="removeWish"
+              @save="addSaving"
+            ></wish-item>
+          </div>
+        </section>
+
+        <!-- Неіснуючий маршрут або товар: сторінка «Не знайдено» -->
+        <section v-else class="not-found">
+          <h2>Сторінку не знайдено</h2>
+          <p>За адресою «{{ route.path }}» нічого немає — можливо, товар видалено або посилання неправильне.</p>
+          <a href="#/" data-link class="btn-reload">На головну</a>
+        </section>
+      </main>
+
+      <aside id="total" class="total">
+        <h2>Сума</h2>
+        <p class="total__label">Разом за некупленими бажаннями</p>
+        <p id="total-price">{{ total.toFixed(2) }}</p>
+        <p class="total__count">Бажань у списку: {{ wishes.length }}, куплено: {{ purchasedCount }}</p>
+      </aside>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 КПІ. Усі права захищені.</p>
+      <address>
+        <p>
+          Контакти:
+          <a href="mailto:demuraevgenij562@gmail.com"
+            >demuraevgenij562@gmail.com</a
+          >,
+          <a href="tel:+380997971565">+38 (099) 797-15-65</a>
+        </p>
+      </address>
+    </footer>
+
+  </body>
+</html>
