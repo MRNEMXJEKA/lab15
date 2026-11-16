@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "title": "Новий ноутбук",
+    "price": 109999,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "високий",
+    "saved": 30000,
+    "image": "https://content.rozetka.com.ua/goods/images/big/677460228.jpg"
+  },
+  {
+    "id": 2,
+    "title": "Навушники",
+    "price": 3399,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "середній",
+    "saved": 2500,
+    "image": "https://content.rozetka.com.ua/goods/images/big/595395804.jpg"
+  },
+  {
+    "id": 3,
+    "title": "Книга з програмування",
+    "price": 1500,
+    "url": "https://www.manning.com/books/grokking-algorithms",
+    "purchased": false,
+    "priority": "низький",
+    "saved": 0,
+    "image": "https://work.njae.me.uk/content/images/size/w2000/2018/04/grokking-algorithms.png"
+  },
+  {
+    "id": 4,
+    "title": "Механічна клавіатура",
+    "price": 3200,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "середній",
+    "saved": 800
+  },
+  {
+    "id": 5,
+    "title": "Рюкзак для ноутбука",
+    "price": 1450,
+    "url": "https://rozetka.com.ua/",
+    "purchased": true,
+    "priority": "середній",
+    "saved": 1450
+  },
+  {
+    "id": 6,
+    "title": "Настільна лампа",
+    "price": 850,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "низький",
+    "saved": 0
+  },
+  {
+    "id": 7,
+    "title": "Електронна книга",
+    "price": 5200,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "високий",
+    "saved": 1500
+  },
+  {
+    "id": 8,
+    "title": "Бездротова мишка",
+    "price": 999,
+    "url": "https://rozetka.com.ua/",
+    "purchased": false,
+    "priority": "низький",
+    "saved": 300
+  }
+]
